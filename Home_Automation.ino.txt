@@ -1,0 +1,70 @@
+#include <LiquidCrystal.h>
+
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+const int PIR = 8;
+const int bulb = 7;
+const int tempPin = A1;
+const int fan = 10;
+int temp;
+int tempMin = 30;
+int tempMax = 60;
+int fanSpeed;
+int fanLCD;
+int PIRState = 0;
+
+const int ledPin = 9;
+const int ldrPin = A0;
+
+void setup() {
+  pinMode(PIR, INPUT);
+  pinMode(bulb, OUTPUT);
+  pinMode(fan, OUTPUT);
+  pinMode(tempPin, INPUT);
+  lcd.begin(16, 2);
+  pinMode(ledPin, OUTPUT);
+  pinMode(ldrPin, INPUT);
+}
+
+void loop() {
+  PIRState = digitalRead(PIR);
+  if (PIRState == HIGH) {
+    digitalWrite(bulb, HIGH);
+  } else {
+    digitalWrite(bulb, LOW);
+  }
+
+  temp = readTemp();
+
+  if (temp < tempMin) {
+    fanSpeed = 0;
+    analogWrite(fan, fanSpeed);
+    fanLCD = 0;
+    digitalWrite(fan, LOW);
+  } else if (temp >= tempMin) {
+    fanSpeed = temp;
+    fanSpeed = 1.5 * fanSpeed;
+    fanLCD = map(temp, tempMin, tempMax, 30, 60);
+    analogWrite(fan, fanSpeed);
+  }
+
+  lcd.print("TEMP: ");
+  lcd.print(temp);
+  lcd.print("C ");
+  lcd.setCursor(0, 0);
+  delay(200);
+
+  int ldrStatus = analogRead(ldrPin);
+
+  if (ldrStatus <= 300) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+int readTemp() {
+  temp = analogRead(tempPin);
+  return temp * 0.48828125;
+}
